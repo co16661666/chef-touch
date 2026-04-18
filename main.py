@@ -1,5 +1,5 @@
 import cv2
-import markerDetector
+import tools.markerDetector as markerDetector
 
 # Configure webcam input
 CAMERA_INDEX = 1  # 0 for default/built-in camera, 1+ for external cameras
