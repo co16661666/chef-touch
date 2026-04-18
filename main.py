@@ -1,6 +1,18 @@
 import cv2
 import tools.markerDetector as markerDetector
 
+from enum import Enum
+
+class TagName(Enum):
+    MAT_TL = 1
+    MAT_TR = 2
+    MAT_BR = 3
+    MAT_BL = 4
+
+    MIX_PLATE = 5
+    PLATE_A = 6
+    PLATE_B = 7
+
 # Configure webcam input
 CAMERA_INDEX = 1  # 0 for default/built-in camera, 1+ for external cameras
 VIDEO_WIDTH = 1280
