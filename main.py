@@ -1,5 +1,7 @@
 import cv2
 import tools.markerDetector as markerDetector
+import storylines.story0 as story0
+import tools.pointCorrection as pointCorrection
 
 from enum import Enum
 
@@ -57,6 +59,43 @@ def detect_markers_from_webcam():
         # Detect markers in the frame
         results = markerDetector.get_marker_dict(temp_image_path)
         
+        # Apply point correction if calibration markers are present
+        if results and all(marker_id in results for marker_id in [1, 2, 3, 4]):
+            # Extract top-left corners of calibration markers
+            calibration_corners = [
+                results[1]["top_left"],
+                results[2]["top_left"],
+                results[3]["top_left"],
+                results[4]["top_left"]
+            ]
+            
+            # Define destination points (normalized grid)
+            dest_points = [[0, 0], [800, 0], [800, 800], [0, 800]]
+            
+            # Calculate homography
+            H, status = pointCorrection.calculate_homography_from_markers(
+                calibration_corners, 
+                dest_points
+            )
+            
+            if H is not None:
+                # Extract all detected points
+                all_points = [data["top_left"] for marker_id, data in results.items()]
+                
+                # Transform points using homography
+                corrected_points = pointCorrection.transform_points_with_homography(
+                    all_points, H
+                )
+                
+                # Update results with corrected points
+                if corrected_points is not None:
+                    corrected_results = {}
+                    for idx, (marker_id, data) in enumerate(results.items()):
+                        corrected_data = data.copy()
+                        corrected_data["top_left_corrected"] = corrected_points[idx].tolist()
+                        corrected_results[marker_id] = corrected_data
+                    results = corrected_results
+        
         # Display results on frame
         if results:
             for marker_id, data in results.items():
@@ -67,6 +106,13 @@ def detect_markers_from_webcam():
                 cv2.putText(frame, f"ID: {marker_id}", 
                            (center[0] - 20, center[1] - 20),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                
+                # Display corrected top-left if available
+                if "top_left_corrected" in data:
+                    corrected_tl = tuple(map(int, data["top_left_corrected"]))
+                    cv2.circle(frame, corrected_tl, 5, (0, 0, 255), -1)
+                    cv2.putText(frame, "C", (corrected_tl[0] - 5, corrected_tl[1] - 5),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1)
             
             print(f"Frame {frame_count}: Detected {len(results)} markers")
         
