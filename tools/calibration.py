@@ -113,9 +113,9 @@ if len(objpoints) > 0:
     print(f"\nCalibrating camera with {len(objpoints)} images...")
     
     # Get image size
-    img_size = gray.shape[::-1]
+    img_size = gray.shape[::-1] # type: ignore
     
-    ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, img_size, None, None)
+    ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, img_size, None, None) # type: ignore
     
     print("\n=== Calibration Results ===")
     print(f"Reprojection error: {ret:.4f} pixels")
