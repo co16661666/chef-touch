@@ -7,5 +7,6 @@ class Zone:
         self.y_max = y_max
 
     def inZone(self, position):
-        x, y = position
+        x = position['top_left'][0]
+        y = position['top_left'][1]
         return self.x_min <= x <= self.x_max and self.y_min <= y <= self.y_max

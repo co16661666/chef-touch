@@ -43,7 +43,7 @@ class AsyncPygameRenderer:
         if frame is not None and frame_width is not None:
             # Slice horizontal spritesheet
             frame_h = surface.get_height()
-            rect = pygame.Rect(frame * frame_width, 0, frame_width, frame_h)
+            rect = pygame.Rect((frame - 3) * frame_width, 0, frame_width, frame_h)
             surface = surface.subsurface(rect)
 
         if scale:

@@ -8,9 +8,9 @@ class Story0:
         self.story_name = "Basic Cutting"
 
         # Zones TODO: Adjust for setup
-        self.cuttingZone = Zone("Cutting Zone", 0, 200, 0, 200)
-        self.mixingZone = Zone("Mixing Zone", 200, 400, 0, 200)
-        self.servingZone = Zone("Serving Zone", 400, 600, 0, 200)
+        self.cuttingZone = Zone("Cutting Zone", 415, 615, 300, 415)
+        self.mixingZone = Zone("Mixing Zone", -15, 415, 200, 415)
+        self.servingZone = Zone("Serving Zone", 415, 615, -15, 250)
 
         self.lettuce = Ingredient(6, "Lettuce", initTagPosDict[5], 0, 3)
         self.tomato = Ingredient(7, "Tomato", initTagPosDict[6], 0, 3)
@@ -20,9 +20,18 @@ class Story0:
         self.complete = False
 
     def update(self, tagPosDict, cut_active=False, mixing=0):
-        self.lettuce.position = tagPosDict[5]
-        self.tomato.position = tagPosDict[6]
-        self.mixPlate.position = tagPosDict[4]
+        try:
+            self.mixPlate.position = tagPosDict[4]
+        except KeyError:
+            pass
+        try:
+            self.lettuce.position = tagPosDict[5]
+        except KeyError:
+            pass
+        try:
+            self.tomato.position = tagPosDict[6]
+        except KeyError:
+            pass
 
         if self.chapter == 0:
             if mixing == 1:
@@ -40,21 +49,22 @@ class Story0:
     def get_render_list(self):
         # {"image_path": "assets/chop.png", "x": 500, "y": 300, "scale": (64, 64), "frame": 2, "frame_width": 64}
         if self.chapter == 0:
-            return [{"image_path": "assets/splash.png", "x": 1280 / 2, "y": 720 / 2, "scale": (1280, 720)}]
+            return [{"image_path": "assets/splash_screen.png", "x": 0, "y": 0, "scale": (1280, 720)}]
         elif self.chapter == 1:
-            return [{"image_path": "assets/instructions0.png", "x": 1280 / 2, "y": 720 / 2, "scale": (1280, 720)}]
+            return [{"image_path": "assets/instructions.png", "x": 0, "y": 0, "scale": (1280, 720)}]
         elif self.chapter == 2:
             render_list = [
-                {"image_path": self.lettuce.image_path, "x": self.lettuce.position[0], "y": self.lettuce.position[1], "scale": (80, 80)},
-                {"image_path": self.tomato.image_path, "x": self.tomato.position[0], "y": self.tomato.position[1], "scale": (80, 80)},
-                {"image_path": self.mixPlate.image_path, "x": self.mixPlate.position[0], "y": self.mixPlate.position[1], "scale": (100, 100)},
+                {"image_path": "assets/gameplay_background.png", "x": 0, "y": 0, "scale": (1280, 720)},
+                {"image_path": self.lettuce.image_path, "x": self.lettuce.position['top_left'][0], "y": self.lettuce.position['top_left'][1], "scale": (400, 400), "frame": min(self.lettuce.cutNum, self.lettuce.cutThreshold), "frame_width": 400},
+                {"image_path": self.tomato.image_path, "x": self.tomato.position['top_left'][0], "y": self.tomato.position['top_left'][1], "scale": (400, 400), "frame": min(self.tomato.cutNum, self.tomato.cutThreshold), "frame_width": 400}
+                # {"image_path": self.mixPlate.image_path, "x": self.mixPlate.position[0], "y": self.mixPlate.position[1], "scale": (100, 100)},
             ]
             return render_list
         elif self.chapter == 3:
             if self.complete:
-                return [{"image_path": "assets/complete_success.png", "x": 1280 / 2, "y": 720 / 2, "scale": (1280, 720)}]
+                return [{"image_path": "assets/complete_success.png", "x": 0, "y": 0, "scale": (1280, 720)}]
             else:
-                return [{"image_path": "assets/complete_failure.png", "x": 1280 / 2, "y": 720 / 2, "scale": (1280, 720)}]
+                return [{"image_path": "assets/complete_failure.png", "x": 0, "y": 0, "scale": (1280, 720)}]
         
         return []
     

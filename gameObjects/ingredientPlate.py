@@ -11,5 +11,6 @@ class Ingredient(TagObject):
 
         if self.cutNum >= self.cutThreshold:
             self.processed = True
-
+        
+        print(self.cutNum, self.cutThreshold, self.processed)
         return True

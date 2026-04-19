@@ -10,11 +10,11 @@ import serial
 import serial.tools.list_ports
 from tools.asyncSerial import AsyncSerialReader
 print("Serial ports available:", serial.tools.list_ports.comports())
-reader = AsyncSerialReader('COM15', 115200)
+reader = AsyncSerialReader('COM17', 115200)
 
 from tools.asyncPygame import AsyncPygameRenderer
 pygame_renderer = AsyncPygameRenderer(
-    width=900, height=600, fps=20, title="chef touch"
+    width=1280, height=720, fps=20, title="chef touch"
 )
 
 class TagName(Enum):
@@ -150,10 +150,10 @@ def detect_markers_from_webcam():
             # Expected: cut_count, mixing (0 -> idle, 1 -> mixing)
             actions = reader.get_latest()
             if actions:
-                print(f"Serial input received: {actions}")
+                # print(f"Serial input received: {actions}")
                 game_controller.update(actions)
 
-                game_story.update(results, game_controller.cut_active, game_controller.mixing)
+            game_story.update(results, game_controller.cut_active, game_controller.mixing)
 
             if game_story.checkComplete():
                 print("Story Complete!")
@@ -188,7 +188,7 @@ def detect_markers_from_webcam():
                                (top_left[0] + 10, top_left[1] + 20),
                                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 0), 1)
             
-            print(f"Frame {frame_count}: Detected {len(results)} markers")
+            # print(f"Frame {frame_count}: Detected {len(results)} markers")
         
         # Display frame with detections
         cv2.imshow("Marker Detection - External Webcam", frame)
