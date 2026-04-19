@@ -1,4 +1,4 @@
-from tagObject import TagObject
+from .tagObject import TagObject
 
 class MixPlate(TagObject):
     def __init__(self, tag_id, name, position, mixNum, mixThreshold, ing1, ing2):

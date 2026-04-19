@@ -1,4 +1,4 @@
-from tagObject import TagObject
+from .tagObject import TagObject
 
 class Ingredient(TagObject):
     def __init__(self, tag_id, name, position, cutNum, cutThreshold, processed=False):
