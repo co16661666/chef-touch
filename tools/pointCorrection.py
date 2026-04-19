@@ -25,7 +25,7 @@ def calculate_homography_from_markers(marker_corners, dest_points, camera_matrix
         src_points_reshaped = src_points.reshape(-1, 1, 2)
         
         # Undistort the points
-        src_points_undist = cv2.undistortPoints(src_points_reshaped, camera_matrix, dist_coeffs)
+        src_points_undist = cv2.undistortPoints(src_points_reshaped, camera_matrix, dist_coeffs, P=camera_matrix)
         src_points = src_points_undist.reshape(-1, 2)
     
     # Calculate homography using RANSAC for robustness
