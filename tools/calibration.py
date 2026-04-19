@@ -14,30 +14,75 @@ objp[:,:2] = np.mgrid[0:7,0:4].T.reshape(-1,2)
 objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane.
 
-images = sorted(glob.glob('image_*.jpg'))[::20]
+# Webcam configuration
+CAMERA_INDEX = 1
+VIDEO_WIDTH = 1280
+VIDEO_HEIGHT = 720
+FPS = 30
 
-print(f"Found {len(images)} images")
-print("Looking for 7x4 chessboard pattern (7 columns x 4 rows = 28 inner corners)...")
-print("\nNOTE: If no chessboards are found, common reasons are:")
-print("  1. Images contain ArUco markers instead of chessboards")
-print("  2. Chessboard not fully visible in frame")
-print("  3. Wrong pattern size (will try multiple sizes)")
-print("  4. Poor lighting or contrast")
-print("  5. Image blur or motion")
+print("=== Camera Calibration - Live Webcam ===")
+print("Press SPACEBAR to capture calibration image")
+print("Press 'q' to quit and calculate calibration")
 print()
 
-for fname in images:
-    img = cv.imread(fname)
-    if img is None:
-        print(f"Failed to load {fname}")
-        continue
-        
-    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+# Initialize video capture
+cap = cv.VideoCapture(CAMERA_INDEX)
+
+if not cap.isOpened():
+    print(f"Error: Cannot open camera at index {CAMERA_INDEX}")
+    exit()
+
+# Set video properties
+cap.set(cv.CAP_PROP_FRAME_WIDTH, VIDEO_WIDTH)
+cap.set(cv.CAP_PROP_FRAME_HEIGHT, VIDEO_HEIGHT)
+cap.set(cv.CAP_PROP_FPS, FPS)
+
+captured_frames = []
+frame_count = 0
+
+while True:
+    ret, frame = cap.read()
     
-    # Try different pattern sizes in case the chessboard size is wrong
-    # Format: (columns, rows) - inner corners
-    # pattern_sizes = [(7,4), (8,5), (6,4), (7,5), (8,4), (6,5), (9,6), (7,6), (6,6), (5,4), (8,6)]
-    pattern_sizes = [(8,5)]
+    if not ret:
+        print("Error: Failed to read frame")
+        break
+    
+    frame_count += 1
+    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    
+    # Display frame with info
+    display_frame = frame.copy()
+    cv.putText(display_frame, f"Captured: {len(captured_frames)} images", 
+               (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    cv.putText(display_frame, "Press SPACE to capture, 'q' to quit", 
+               (10, 70), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+    
+    cv.imshow("Camera Calibration - Press SPACE to capture", display_frame)
+    
+    key = cv.waitKey(1) & 0xFF
+    
+    if key == ord(' '):  # Spacebar
+        captured_frames.append(gray)
+        print(f"✓ Captured image {len(captured_frames)}")
+    elif key == ord('q'):  # Quit
+        print("\nCalculating calibration...")
+        break
+
+cap.release()
+cv.destroyAllWindows()
+
+print(f"\nTotal images captured: {len(captured_frames)}")
+print("Looking for 8x5 chessboard pattern (8 columns x 5 rows = 40 inner corners)...")
+print("\nNOTE: If no chessboards are found, common reasons are:")
+print("  1. Chessboard not fully visible in frame")
+print("  2. Wrong pattern size")
+print("  3. Poor lighting or contrast")
+print("  4. Image blur or motion")
+print()
+
+pattern_sizes = [(8,5)]
+
+for idx, gray in enumerate(captured_frames):
     found = False
     
     for pattern_size in pattern_sizes:
@@ -54,21 +99,12 @@ for fname in images:
             corners2 = cv.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
             imgpoints.append(corners2)
             
-            # Draw and display the corners
-            cv.drawChessboardCorners(img, pattern_size, corners2, ret)
-            cv.imshow('Chessboard Detected', img)
-            cv.waitKey(1)
-            print(f"✓ {fname}: Found {cols}x{rows} chessboard")
+            print(f"✓ Image {idx + 1}: Found {cols}x{rows} chessboard")
             found = True
             break
     
     if not found:
-        print(f"✗ {fname}: Chessboard not found")
-        # Show the image so user can see what's actually in it
-        cv.imshow('No pattern found - check image', img)
-        cv.waitKey(2)
-
-cv.destroyAllWindows()
+        print(f"✗ Image {idx + 1}: Chessboard not found")
 
 print(f"\nTotal images with chessboard detected: {len(objpoints)}")
 
@@ -76,8 +112,7 @@ print(f"\nTotal images with chessboard detected: {len(objpoints)}")
 if len(objpoints) > 0:
     print(f"\nCalibrating camera with {len(objpoints)} images...")
     
-    # Get image size from the last processed image
-    # gray.shape[::-1] gives (width, height)
+    # Get image size
     img_size = gray.shape[::-1]
     
     ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, img_size, None, None)
