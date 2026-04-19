@@ -21,6 +21,12 @@ VIDEO_WIDTH = 1280
 VIDEO_HEIGHT = 720
 FPS = 30
 
+# TODO: Replace with actual camera calibration values
+CAMERA_MATRIX = [[944.42008778,   0.,         635.58550724],
+                [  0.,         944.2831632,  359.07690285],
+                [  0.,           0.,           1.        ]]
+DIST_COEFFS = [[ 3.03516621e-01, -2.05751194e+00,  1.45973957e-03,  6.58486098e-04, 4.01649152e+00]]
+
 def detect_markers_from_webcam():
     """
     Capture video from external webcam and detect markers in real-time.
@@ -42,6 +48,11 @@ def detect_markers_from_webcam():
     print("Press 'q' to quit")
     
     frame_count = 0
+    
+    # Initialize Story0 with initial marker positions
+    # TODO: Get initial positions from first frame detection
+    initial_positions = {}
+    game_story = None
     
     while True:
         ret, frame = cap.read()
@@ -69,13 +80,15 @@ def detect_markers_from_webcam():
                 results[4]["top_left"]
             ]
             
-            # Define destination points (normalized grid)
+            # Define destination points (normalized grid) TODO: Adjust based on actual setup
             dest_points = [[0, 0], [800, 0], [800, 800], [0, 800]]
             
             # Calculate homography
             H, status = pointCorrection.calculate_homography_from_markers(
                 calibration_corners, 
-                dest_points
+                dest_points,
+                camera_matrix=CAMERA_MATRIX,
+                dist_coeffs=DIST_COEFFS
             )
             
             if H is not None:
@@ -95,6 +108,20 @@ def detect_markers_from_webcam():
                         corrected_data["top_left_corrected"] = corrected_points[idx].tolist()
                         corrected_results[marker_id] = corrected_data
                     results = corrected_results
+        
+        # Initialize story on first frame with all markers detected
+        if game_story is None and results and len(results) >= 5:
+            game_story = story0.Story0(results)
+            print("Game initialized with detected marker positions")
+        
+        # Update story with current marker positions
+        if game_story is not None and results:
+            game_story.update(results)
+            # TODO: Process game logic (cutting, mixing, serving)
+            # game_story.processCutting()
+            # game_story.processMixing()
+            # if game_story.checkComplete():
+            #     print("Story Complete!")
         
         # Display results on frame
         if results:
