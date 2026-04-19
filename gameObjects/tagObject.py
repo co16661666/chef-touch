@@ -3,4 +3,5 @@ class TagObject:
         self.tag_id = tag_id
         self.name = name
         self.position = position
+        self.image_path = f"assets/{name}.png"
         self.processed = processed
