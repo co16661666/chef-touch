@@ -1,6 +1,7 @@
 import cv2
 import tools.markerDetector as markerDetector
 import storylines.story0 as story0
+import gameObjects.gameController as gameController
 import tools.pointCorrection as pointCorrection
 
 from enum import Enum
@@ -10,6 +11,11 @@ import serial.tools.list_ports
 from tools.asyncSerial import AsyncSerialReader
 print("Serial ports available:", serial.tools.list_ports.comports())
 reader = AsyncSerialReader('COM15', 115200)
+
+from tools.asyncPygame import AsyncPygameRenderer
+pygame_renderer = AsyncPygameRenderer(
+    width=900, height=600, fps=20, title="chef touch"
+)
 
 class TagName(Enum):
     MAT_TL = 1
@@ -67,7 +73,8 @@ def detect_markers_from_webcam():
     frame_count = 0
     
     game_story = None
-    
+    game_controller = gameController.GameController()
+
     while True:
         ret, frame = cap.read()
         
@@ -140,8 +147,19 @@ def detect_markers_from_webcam():
         
         # Update story with current marker positions
         if game_story is not None and results:
-            game_story.update(results)
+            # Expected: cut_count, mixing (0 -> idle, 1 -> mixing)
             actions = reader.get_latest()
+            if actions:
+                print(f"Serial input received: {actions}")
+                game_controller.update(actions)
+
+                game_story.update(results, game_controller.cut_active, game_controller.mixing)
+
+            if game_story.checkComplete():
+                print("Story Complete!")
+
+            pygame_renderer.update_render_list(game_story.get_render_list())
+
             # TODO: Process game logic (cutting, mixing, serving)
             # game_story.processCutting()
             # game_story.processMixing()
@@ -184,6 +202,7 @@ def detect_markers_from_webcam():
     cap.release()
     cv2.destroyAllWindows()
     reader.stop()
+    pygame_renderer.stop()
     print(f"Total frames processed: {frame_count}")
 
 # Run the webcam marker detection
